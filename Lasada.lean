@@ -2,6 +2,7 @@ import Lasada.Tokenizer
 import Lasada.DistillWB
 import Lasada.DistillHB
 import Lasada.CodeGen
+import Lasada.ModelSpec
 
 namespace Lasada
 
