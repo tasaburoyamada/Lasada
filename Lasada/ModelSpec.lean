@@ -7,7 +7,7 @@ open Lasada.DistillWB
 /-- ターゲットモデル種別 -/
 inductive TargetModelKind where
   | E4BBase       : TargetModelKind -- E4Bベース軽量モデル
-  | B31_40B_1bit  : TargetModelKind -- 31Bベース 40B 1bit量子化モデル
+  | E4B_40B_1bit  : TargetModelKind -- E4Bベース 40B 1bit量子化モデル (試案1)
   | B31_70B       : TargetModelKind -- 31Bベース 70B大容量モデル
   deriving Inhabited, BEq, Repr
 
@@ -33,15 +33,15 @@ def profileE4B : ModelProfile := {
   projectionConfig := { teacherDim := 3584, studentDim := 2048, latentDim := 256 }
 }
 
-/-- 31B ベース 40B 1bitモデルプロファイル -/
-def profile31B_40B_1bit : ModelProfile := {
-  kind := .B31_40B_1bit,
-  name := "Lasada-31B-40B-1bit",
+/-- E4B ベース 40B 1bitモデルプロファイル (試案1) -/
+def profileE4B_40B_1bit : ModelProfile := {
+  kind := .E4B_40B_1bit,
+  name := "Lasada-E4B-40B-1bit",
   studentDim := 7168,
   numLayers := 48,
   numHeads := 56,
   is1bitQuant := true,
-  projectionConfig := { teacherDim := 8192, studentDim := 7168, latentDim := 512 }
+  projectionConfig := { teacherDim := 3584, studentDim := 7168, latentDim := 512 }
 }
 
 /-- 31B ベース 70Bモデルプロファイル -/
@@ -56,6 +56,6 @@ def profile31B_70B : ModelProfile := {
 }
 
 /-- ターゲットモデルの一覧 -/
-def targetProfiles : List ModelProfile := [profileE4B, profile31B_40B_1bit, profile31B_70B]
+def targetProfiles : List ModelProfile := [profileE4B, profileE4B_40B_1bit, profile31B_70B]
 
 end Lasada.ModelSpec

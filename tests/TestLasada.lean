@@ -55,11 +55,11 @@ def main : IO Unit := do
   assertTest "Generated C++ Contains Symbol32 Header" (cppSnippet.contains "Symbol32.h")
   assertTest "Generated C++ Contains Lyceum Context Initializer" (cppSnippet.contains "init_lyceum_mcp_context")
 
-  -- テスト 7: ターゲットモデルプロファイル (E4B, 40B 1bit, 70B) 仕様の型検証
+  -- テスト 7: ターゲットモデルプロファイル (E4B, E4B-40B 1bit, 70B) 仕様の型検証
   let profiles := targetProfiles
   assertTest "Target Model Profiles Count == 3" (profiles.length == 3)
   assertTest "Profile 1 is E4B Base" (profileE4B.studentDim == 2048 && not profileE4B.is1bitQuant)
-  assertTest "Profile 2 is 40B 1bit Model" (profile31B_40B_1bit.studentDim == 7168 && profile31B_40B_1bit.is1bitQuant)
+  assertTest "Profile 2 is E4B-40B 1bit Model" (profileE4B_40B_1bit.projectionConfig.teacherDim == 3584 && profileE4B_40B_1bit.is1bitQuant)
   assertTest "Profile 3 is 70B Model" (profile31B_70B.studentDim == 8192 && not profile31B_70B.is1bitQuant)
 
   IO.println "=================================================="

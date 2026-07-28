@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Lasada Model Build Execution Script
------------------------------------
+Lasada Model Build Execution Script (Option 1 Configuration)
+------------------------------------------------------------
 Builds 3 base models prior to domain specialization:
-1. Lasada-E4B-Base (E4B Teacher)
-2. Lasada-31B-40B-1bit (31B Teacher, 40B-class 1bit BitNet Quantization)
-3. Lasada-31B-70B (31B Teacher, 70B-class dense model)
+1. Lasada-E4B-Base (E4B Teacher -> 4B Dense Student)
+2. Lasada-E4B-40B-1bit (E4B Teacher -> 40B-class 1bit BitNet Quantization)
+3. Lasada-31B-70B (31B Teacher -> 70B-class Dense Student)
 """
 
 import os
@@ -28,14 +28,14 @@ TARGET_PROFILES = [
         "output_path": os.path.join(OUTPUT_DIR, "Lasada-E4B-Base")
     },
     {
-        "name": "Lasada-31B-40B-1bit",
-        "teacher_gemma": os.path.join(MODELS_DIR, "gemma-4-31B"),
+        "name": "Lasada-E4B-40B-1bit",
+        "teacher_gemma": os.path.join(MODELS_DIR, "gemma-4-E4B"),
         "teacher_japanese": os.path.join(MODELS_DIR, "llm-jp-4-32b-a3b-thinking"),
         "student_dim": 7168,
         "num_layers": 48,
         "num_heads": 56,
         "is_1bit": True,
-        "output_path": os.path.join(OUTPUT_DIR, "Lasada-31B-40B-1bit")
+        "output_path": os.path.join(OUTPUT_DIR, "Lasada-E4B-40B-1bit")
     },
     {
         "name": "Lasada-31B-70B",
@@ -69,6 +69,7 @@ def main():
             json.dump({
                 "model_type": "lasada_base",
                 "name": profile['name'],
+                "teacher_gemma": profile['teacher_gemma'],
                 "hidden_size": profile['student_dim'],
                 "num_hidden_layers": profile['num_layers'],
                 "num_attention_heads": profile['num_heads'],
