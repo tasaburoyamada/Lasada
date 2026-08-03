@@ -59,13 +59,13 @@ def main : IO Unit := do
   assertTest "Generated Triton Contains Triton JIT Annotations" (tritonSnippet.contains "@triton.jit")
   assertTest "Generated Triton Contains Lyceum Triton Context Initializer" (tritonSnippet.contains "init_lyceum_triton_context")
 
-  -- テスト 7: ターゲットモデルプロファイル (E4B, E4B-40B 1bit, 70B, BitMoE 40B) 仕様の型検証
+  -- テスト 7: 全4ターゲットモデルプロファイル (すべて 1bit BitMoE) 仕様の型検証
   let profiles := targetProfiles
   assertTest "Target Model Profiles Count == 4" (profiles.length == 4)
-  assertTest "Profile 1 is E4B Base" (profileE4B.studentDim == 2048 && not profileE4B.is1bitQuant)
-  assertTest "Profile 2 is E4B-40B 1bit Model" (profileE4B_40B_1bit.projectionConfig.teacherDim == 3584 && profileE4B_40B_1bit.is1bitQuant)
-  assertTest "Profile 3 is 70B Model" (profile31B_70B.studentDim == 8192 && not profile31B_70B.is1bitQuant)
-  assertTest "Profile 4 is BitMoE 40B Model" (profileBitMoE_40B.numExperts == 8 && profileBitMoE_40B.activeExperts == 2 && profileBitMoE_40B.is1bitQuant)
+  assertTest "Profile 1 is BitMoE E4B-Base" (profileBitMoE_E4B_Base.is1bitQuant && profileBitMoE_E4B_Base.numExperts == 8)
+  assertTest "Profile 2 is BitMoE E4B-40B" (profileBitMoE_E4B_40B.is1bitQuant && profileBitMoE_E4B_40B.numExperts == 8)
+  assertTest "Profile 3 is BitMoE 31B-40B" (profileBitMoE_31B_40B.is1bitQuant && profileBitMoE_31B_40B.numExperts == 8)
+  assertTest "Profile 4 is BitMoE 31B-70B (1bit 16 Experts)" (profileBitMoE_31B_70B.is1bitQuant && profileBitMoE_31B_70B.numExperts == 16)
 
   IO.println "=================================================="
   IO.println " All 7 Blackbox Test Scenarios Passed Successfully."

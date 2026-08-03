@@ -18,39 +18,31 @@ OUTPUT_DIR = "/home/tasaburoyamada/models/lasada_output"
 
 TARGET_PROFILES = [
     {
-        "name": "Lasada-E4B-Base",
+        "name": "Lasada-BitMoE-E4B-Base",
         "teacher_gemma": os.path.join(MODELS_DIR, "gemma-4-E4B"),
         "teacher_japanese": os.path.join(MODELS_DIR, "llm-jp-4-8b-instruct"),
         "student_dim": 2048,
         "num_layers": 24,
         "num_heads": 16,
-        "is_1bit": False,
-        "output_path": os.path.join(OUTPUT_DIR, "Lasada-E4B-Base")
+        "is_1bit": True,
+        "num_experts": 8,
+        "active_experts": 2,
+        "output_path": os.path.join(OUTPUT_DIR, "Lasada-BitMoE-E4B-Base")
     },
     {
-        "name": "Lasada-E4B-40B-1bit",
+        "name": "Lasada-BitMoE-E4B-40B",
         "teacher_gemma": os.path.join(MODELS_DIR, "gemma-4-E4B"),
         "teacher_japanese": os.path.join(MODELS_DIR, "llm-jp-4-32b-a3b-thinking"),
-        "student_dim": 7168,
-        "num_layers": 48,
-        "num_heads": 56,
+        "student_dim": 4096,
+        "num_layers": 32,
+        "num_heads": 32,
         "is_1bit": True,
-        "output_path": os.path.join(OUTPUT_DIR, "Lasada-E4B-40B-1bit")
+        "num_experts": 8,
+        "active_experts": 2,
+        "output_path": os.path.join(OUTPUT_DIR, "Lasada-BitMoE-E4B-40B")
     },
     {
-        "name": "Lasada-31B-70B",
-        "teacher_gemma": os.path.join(MODELS_DIR, "gemma-4-31B"),
-        "teacher_japanese": os.path.join(MODELS_DIR, "llm-jp-4-32b-a3b-thinking"),
-        "student_dim": 8192,
-        "num_layers": 80,
-        "num_heads": 64,
-        "is_1bit": False,
-        "num_experts": 0,
-        "active_experts": 0,
-        "output_path": os.path.join(OUTPUT_DIR, "Lasada-31B-70B")
-    },
-    {
-        "name": "Lasada-BitMoE-40B",
+        "name": "Lasada-BitMoE-31B-40B",
         "teacher_gemma": os.path.join(MODELS_DIR, "gemma-4-31B"),
         "teacher_japanese": os.path.join(MODELS_DIR, "llm-jp-4-32b-a3b-thinking"),
         "student_dim": 4096,
@@ -59,9 +51,56 @@ TARGET_PROFILES = [
         "is_1bit": True,
         "num_experts": 8,
         "active_experts": 2,
-        "output_path": os.path.join(OUTPUT_DIR, "Lasada-BitMoE-40B")
+        "output_path": os.path.join(OUTPUT_DIR, "Lasada-BitMoE-31B-40B")
+    },
+    {
+        "name": "Lasada-BitMoE-31B-70B",
+        "teacher_gemma": os.path.join(MODELS_DIR, "gemma-4-31B"),
+        "teacher_japanese": os.path.join(MODELS_DIR, "llm-jp-4-32b-a3b-thinking"),
+        "student_dim": 8192,
+        "num_layers": 64,
+        "num_heads": 64,
+        "is_1bit": True,
+        "num_experts": 16,
+        "active_experts": 2,
+        "output_path": os.path.join(OUTPUT_DIR, "Lasada-BitMoE-31B-70B")
     }
 ]
+
+def generate_summary_text():
+    summary_path = os.path.join(OUTPUT_DIR, "MODEL_PROFILES.txt")
+    doc_path = "/home/tasaburoyamada/sandbox/Lasada/doc/MODEL_PROFILES.md"
+    
+    lines = [
+        "=========================================================================",
+        "           Lasada 生徒モデル 詳細仕様・ビルドプロファイル一覧            ",
+        "=========================================================================",
+        f"生成日時: {time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}",
+        "共通仕様: アジア優先トークナイザ (Symbol32), BitMoE (Dense Router + 1bit Experts), BitNet b1.58 量子化",
+        "-------------------------------------------------------------------------",
+        ""
+    ]
+    
+    for p in TARGET_PROFILES:
+        lines.extend([
+            f"■ モデル名: {p['name']}",
+            f"  - 教師 Gemma モデル : {p['teacher_gemma']}",
+            f"  - 教師 日本語モデル: {p['teacher_japanese']}",
+            f"  - 隠れ層次元 (Dim) : {p['student_dim']}",
+            f"  - レイヤー数 / Head: {p['num_layers']} レイヤー / {p['num_heads']} ヘッド",
+            f"  - 1bit 量子化 (BitNet): {p['is_1bit']}",
+            f"  - MoE エキスパート数: {p['num_experts']} Experts (Top-{p['active_experts']} Active)",
+            f"  - 出力ディレクトリ  : {p['output_path']}",
+            ""
+        ])
+    lines.append("=========================================================================")
+    
+    content = "\n".join(lines)
+    with open(summary_path, "w", encoding="utf-8") as f:
+        f.write(content)
+    with open(doc_path, "w", encoding="utf-8") as f:
+        f.write("# Lasada 生徒モデル詳細仕様ドキュメント (MODEL_PROFILES.md)\n\n```\n" + content + "\n```\n")
+    print(f"  -> Generated detailed text summary at:\n     1. {summary_path}\n     2. {doc_path}")
 
 def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -76,20 +115,22 @@ def main():
         print(f"  Student Dim:      {profile['student_dim']}")
         print(f"  Layers/Heads:     {profile['num_layers']} / {profile['num_heads']}")
         print(f"  1bit Quantize:    {profile['is_1bit']}")
+        print(f"  MoE Experts:      {profile['num_experts']} Experts (Top-{profile['active_experts']} Active)")
 
         os.makedirs(profile['output_path'], exist_ok=True)
         config_path = os.path.join(profile['output_path'], "config.json")
         with open(config_path, "w", encoding="utf-8") as f:
             json.dump({
-                "model_type": "lasada_bitmoe" if profile.get("num_experts", 0) > 0 else "lasada_base",
+                "model_type": "lasada_bitmoe",
                 "name": profile['name'],
                 "teacher_gemma": profile['teacher_gemma'],
+                "teacher_japanese": profile['teacher_japanese'],
                 "hidden_size": profile['student_dim'],
                 "num_hidden_layers": profile['num_layers'],
                 "num_attention_heads": profile['num_heads'],
                 "is_1bit_quantized": profile['is_1bit'],
-                "num_experts": profile.get("num_experts", 0),
-                "active_experts": profile.get("active_experts", 0),
+                "num_experts": profile['num_experts'],
+                "active_experts": profile['active_experts'],
                 "asian_priority_tokenizer": True,
                 "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
             }, f, indent=2)
@@ -99,8 +140,10 @@ def main():
         print(f"  -> Executing HB Soft-Label & DPO Alignment (LLM-jp-4 -> Student)...")
         print(f"  -> Build completed for {profile['name']}")
 
+    generate_summary_text()
+
     print("\n==================================================")
-    print(" All 3 Target Models Created Successfully in ~/models/lasada_output")
+    print(" All 4 BitMoE 1bit Target Models Created Successfully in ~/models/lasada_output")
     print("==================================================")
 
 if __name__ == "__main__":

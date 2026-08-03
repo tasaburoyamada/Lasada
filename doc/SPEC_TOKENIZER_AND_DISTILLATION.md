@@ -55,9 +55,13 @@
 
 ## 4. BitMoE アーキテクチャ仕様 (`Lasada.ModelSpec` 拡張)
 
-### 4.1 BitMoE 構成原則 (試案 B 採択)
+### 4.1 BitMoE 構成原則 (全面統一標準)
 - **Dense Gate Router**: 浮動小数点精度 (FP16 / BF16) の決定論的 Top-2 ルーター。
-- **1-bit Experts**: 各 MoE レイヤー配下に 8 〜 16 個の 1bit (BitNet b1.58) 専門化 Expert を配置。
-- **メモリ・計算効率**: 総パラメーター数 30B〜70B 規模でありながら、アクティブパラメーターおよびメモリ帯域コストを従来の 1/4 以下に抑制。
+- **1-bit Experts**: すべての生徒モデルで各 MoE レイヤー配下に 8 〜 16 個の 1bit (BitNet b1.58) 専門化 Expert を配置。
+- **全ターゲットラインナップ**:
+  1. `Lasada-BitMoE-E4B-Base`: 4B クラス 1bit BitMoE (8 Experts / Top-2 Active)
+  2. `Lasada-BitMoE-E4B-40B`: 40B クラス 1bit BitMoE (8 Experts / Top-2 Active)
+  3. `Lasada-BitMoE-31B-40B`: 40B クラス 1bit BitMoE (8 Experts / Top-2 Active)
+  4. `Lasada-BitMoE-31B-70B`: 70B クラス 1bit BitMoE (16 Experts / Top-2 Active)
 
 
