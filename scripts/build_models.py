@@ -45,7 +45,21 @@ TARGET_PROFILES = [
         "num_layers": 80,
         "num_heads": 64,
         "is_1bit": False,
+        "num_experts": 0,
+        "active_experts": 0,
         "output_path": os.path.join(OUTPUT_DIR, "Lasada-31B-70B")
+    },
+    {
+        "name": "Lasada-BitMoE-40B",
+        "teacher_gemma": os.path.join(MODELS_DIR, "gemma-4-31B"),
+        "teacher_japanese": os.path.join(MODELS_DIR, "llm-jp-4-32b-a3b-thinking"),
+        "student_dim": 4096,
+        "num_layers": 32,
+        "num_heads": 32,
+        "is_1bit": True,
+        "num_experts": 8,
+        "active_experts": 2,
+        "output_path": os.path.join(OUTPUT_DIR, "Lasada-BitMoE-40B")
     }
 ]
 
@@ -67,13 +81,15 @@ def main():
         config_path = os.path.join(profile['output_path'], "config.json")
         with open(config_path, "w", encoding="utf-8") as f:
             json.dump({
-                "model_type": "lasada_base",
+                "model_type": "lasada_bitmoe" if profile.get("num_experts", 0) > 0 else "lasada_base",
                 "name": profile['name'],
                 "teacher_gemma": profile['teacher_gemma'],
                 "hidden_size": profile['student_dim'],
                 "num_hidden_layers": profile['num_layers'],
                 "num_attention_heads": profile['num_heads'],
                 "is_1bit_quantized": profile['is_1bit'],
+                "num_experts": profile.get("num_experts", 0),
+                "active_experts": profile.get("active_experts", 0),
                 "asian_priority_tokenizer": True,
                 "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
             }, f, indent=2)

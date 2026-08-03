@@ -24,8 +24,8 @@
 3. **日本語半ブラックボックス蒸留 (`Lasada/DistillHB.lean`)**
    - 日本語特化モデルからの Logit 転写および DPO 損失計算グラフ
    - `Nomos.Laws` に基づく損失上界・挙動境界の不変条件チェック
-4. **C++/CUDA 実行コード生成モジュール (`Lasada/CodeGen.lean`)**
-   - `lbir` バイナリ表現および C++/CUDA ネイティブコード生成
+4. **C++/Triton 実行コード生成モジュール (`Lasada/CodeGen.lean`)**
+   - `lbir` バイナリ表現および C++20 / Triton GPU ネイティブコード生成
 
 ---
 

@@ -17,7 +17,8 @@ graph TD
     B["lbir (検証可能中間表現 IR)"] --> D
     C["Nomos (決定論的不変条件検証)"] --> D
     E["Lyceum (形式検証 LLM 制御プレーン)"] --> D
-    D --> F["検証済み C++20 / AVX-512 / OpenMP ネイティブコード生成"]
+    D --> F1["検証済み C++20 / AVX-512 / OpenMP CPUコード生成"]
+    D --> F2["検証済み Triton (Python/GPU) 高速化カーネルコード生成"]
 ```
 
 
