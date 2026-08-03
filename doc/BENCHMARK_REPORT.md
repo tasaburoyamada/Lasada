@@ -1,6 +1,6 @@
 # Lasada 全体ベンチマーク & 性能評価レポート (BENCHMARK_REPORT.md)
 
-**測定日時**: 2026-08-03 09:02:05 UTC
+**測定日時**: 2026-08-03 10:28:40 UTC
 **評価システム**: Lasada Verified System (Lean 4 / Nomos / Lyceum / Symbol32)
 
 ---
