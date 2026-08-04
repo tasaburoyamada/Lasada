@@ -59,13 +59,14 @@ def main : IO Unit := do
   assertTest "Generated Triton Contains Triton JIT Annotations" (tritonSnippet.contains "@triton.jit")
   assertTest "Generated Triton Contains Lyceum Triton Context Initializer" (tritonSnippet.contains "init_lyceum_triton_context")
 
-  -- テスト 7: 全4ターゲットモデルプロファイル (すべて 1bit BitMoE) 仕様の型検証
+  -- テスト 7: 全5ターゲットモデルプロファイル (すべて 1bit BitMoE) 仕様の型検証
   let profiles := targetProfiles
-  assertTest "Target Model Profiles Count == 4" (profiles.length == 4)
+  assertTest "Target Model Profiles Count == 5" (profiles.length == 5)
   assertTest "Profile 1 is BitMoE E4B-Base" (profileBitMoE_E4B_Base.is1bitQuant && profileBitMoE_E4B_Base.numExperts == 8)
-  assertTest "Profile 2 is BitMoE E4B-40B" (profileBitMoE_E4B_40B.is1bitQuant && profileBitMoE_E4B_40B.numExperts == 8)
-  assertTest "Profile 3 is BitMoE 31B-40B" (profileBitMoE_31B_40B.is1bitQuant && profileBitMoE_31B_40B.numExperts == 8)
-  assertTest "Profile 4 is BitMoE 31B-70B (1bit 16 Experts)" (profileBitMoE_31B_70B.is1bitQuant && profileBitMoE_31B_70B.numExperts == 16)
+  assertTest "Profile 2 is BitMoE 31B-Base (31B Teacher 4B Student)" (profileBitMoE_31B_Base.is1bitQuant && profileBitMoE_31B_Base.projectionConfig.teacherDim == 8192)
+  assertTest "Profile 3 is BitMoE E4B-40B" (profileBitMoE_E4B_40B.is1bitQuant && profileBitMoE_E4B_40B.numExperts == 8)
+  assertTest "Profile 4 is BitMoE 31B-40B" (profileBitMoE_31B_40B.is1bitQuant && profileBitMoE_31B_40B.numExperts == 8)
+  assertTest "Profile 5 is BitMoE 31B-70B (1bit 16 Experts)" (profileBitMoE_31B_70B.is1bitQuant && profileBitMoE_31B_70B.numExperts == 16)
 
   IO.println "=================================================="
   IO.println " All 7 Blackbox Test Scenarios Passed Successfully."

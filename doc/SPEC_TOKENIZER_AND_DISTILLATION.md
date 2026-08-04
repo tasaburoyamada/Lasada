@@ -59,9 +59,10 @@
 - **Dense Gate Router**: 浮動小数点精度 (FP16 / BF16) の決定論的 Top-2 ルーター。
 - **1-bit Experts**: すべての生徒モデルで各 MoE レイヤー配下に 8 〜 16 個の 1bit (BitNet b1.58) 専門化 Expert を配置。
 - **全ターゲットラインナップ**:
-  1. `Lasada-BitMoE-E4B-Base`: 4B クラス 1bit BitMoE (8 Experts / Top-2 Active)
-  2. `Lasada-BitMoE-E4B-40B`: 40B クラス 1bit BitMoE (8 Experts / Top-2 Active)
-  3. `Lasada-BitMoE-31B-40B`: 40B クラス 1bit BitMoE (8 Experts / Top-2 Active)
-  4. `Lasada-BitMoE-31B-70B`: 70B クラス 1bit BitMoE (16 Experts / Top-2 Active)
+  1. `Lasada-BitMoE-E4B-Base`: E4B 教師 / 4B クラス 1bit BitMoE (8 Experts / Top-2 Active)
+  2. `Lasada-BitMoE-31B-Base`: 31B 教師 / 4B クラス 超小型 1bit BitMoE (8 Experts / Top-2 Active)
+  3. `Lasada-BitMoE-E4B-40B`: E4B 教師 / 40B クラス 1bit BitMoE (8 Experts / Top-2 Active)
+  4. `Lasada-BitMoE-31B-40B`: 31B 教師 / 40B クラス 1bit BitMoE (8 Experts / Top-2 Active)
+  5. `Lasada-BitMoE-31B-70B`: 31B 教師 / 70B クラス 1bit BitMoE (16 Experts / Top-2 Active)
 
 

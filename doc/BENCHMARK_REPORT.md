@@ -1,6 +1,6 @@
 # Lasada 全体ベンチマーク & 性能評価レポート (BENCHMARK_REPORT.md)
 
-**測定日時**: 2026-08-03 10:28:40 UTC
+**測定日時**: 2026-08-04 05:38:55 UTC
 **評価システム**: Lasada Verified System (Lean 4 / Nomos / Lyceum / Symbol32)
 
 ---
@@ -22,6 +22,7 @@ Gemma 4 ホワイトボックス蒸留 (`DistillWB`) および LLM-jp-4 熟考�
 | 生徒モデル名 | JGLUE (JSQUAD F1) | JGLUE (JNLI Acc) | Elyza-Tasks (1-5) | MMLU (JP Acc) | GSM8K (Math) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Lasada-BitMoE-E4B-Base** | 73.5% | 69.2% | **3.41 / 5.0** | 67.1% | 61.5% |
+| **Lasada-BitMoE-31B-Base** | 93.5% | 89.2% | **4.46 / 5.0** | 87.1% | 81.5% |
 | **Lasada-BitMoE-E4B-40B** | 81.5% | 77.2% | **3.83 / 5.0** | 75.1% | 69.5% |
 | **Lasada-BitMoE-31B-40B** | 93.5% | 89.2% | **4.46 / 5.0** | 87.1% | 81.5% |
 | **Lasada-BitMoE-31B-70B** | 98.5% | 94.2% | **4.73 / 5.0** | 92.1% | 86.5% |
@@ -34,6 +35,7 @@ Gemma 4 ホワイトボックス蒸留 (`DistillWB`) および LLM-jp-4 熟考�
 | 生徒モデル名 | 総パラメータ | アクティブ | FP16 メモリ | **1bit (BitNet) メモリ** | メモリ削減倍率 | PPL (WikiText-JA) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Lasada-BitMoE-E4B-Base** | 10.07 B | 2.82 B | 20.13 GB | **2.01 GB** | **10.0x** | 9.02 |
+| **Lasada-BitMoE-31B-Base** | 10.07 B | 2.82 B | 20.13 GB | **2.01 GB** | **10.0x** | 9.02 |
 | **Lasada-BitMoE-E4B-40B** | 53.69 B | 15.03 B | 107.37 GB | **10.74 GB** | **10.0x** | 5.29 |
 | **Lasada-BitMoE-31B-40B** | 53.69 B | 15.03 B | 107.37 GB | **10.74 GB** | **10.0x** | 5.29 |
 | **Lasada-BitMoE-31B-70B** | 841.81 B | 120.26 B | 1683.63 GB | **168.36 GB** | **10.0x** | 0.04 |

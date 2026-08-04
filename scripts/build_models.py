@@ -30,6 +30,18 @@ TARGET_PROFILES = [
         "output_path": os.path.join(OUTPUT_DIR, "Lasada-BitMoE-E4B-Base")
     },
     {
+        "name": "Lasada-BitMoE-31B-Base",
+        "teacher_gemma": os.path.join(MODELS_DIR, "gemma-4-31B"),
+        "teacher_japanese": os.path.join(MODELS_DIR, "llm-jp-4-32b-a3b-thinking"),
+        "student_dim": 2048,
+        "num_layers": 24,
+        "num_heads": 16,
+        "is_1bit": True,
+        "num_experts": 8,
+        "active_experts": 2,
+        "output_path": os.path.join(OUTPUT_DIR, "Lasada-BitMoE-31B-Base")
+    },
+    {
         "name": "Lasada-BitMoE-E4B-40B",
         "teacher_gemma": os.path.join(MODELS_DIR, "gemma-4-E4B"),
         "teacher_japanese": os.path.join(MODELS_DIR, "llm-jp-4-32b-a3b-thinking"),

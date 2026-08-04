@@ -7,6 +7,7 @@ open Lasada.DistillWB
 /-- ターゲットモデル種別 -/
 inductive TargetModelKind where
   | BitMoE_E4B_Base : TargetModelKind -- E4Bベース 4Bクラス BitMoE 1bit
+  | BitMoE_31B_Base : TargetModelKind -- 31Bベース 4Bクラス 超小型 BitMoE 1bit
   | BitMoE_E4B_40B  : TargetModelKind -- E4Bベース 40Bクラス BitMoE 1bit
   | BitMoE_31B_40B  : TargetModelKind -- 31Bベース 40Bクラス BitMoE 1bit
   | BitMoE_31B_70B  : TargetModelKind -- 31Bベース 70Bクラス BitMoE 1bit
@@ -38,7 +39,20 @@ def profileBitMoE_E4B_Base : ModelProfile := {
   projectionConfig := { teacherDim := 3584, studentDim := 2048, latentDim := 256 }
 }
 
-/-- 2. BitMoE E4B-40B モデルプロファイル (40Bクラス 1bit BitMoE) -/
+/-- 2. BitMoE 31B-Base モデルプロファイル (Gemma 4 31B 教師 4Bクラス 超小型 1bit BitMoE) -/
+def profileBitMoE_31B_Base : ModelProfile := {
+  kind := .BitMoE_31B_Base,
+  name := "Lasada-BitMoE-31B-Base",
+  studentDim := 2048,
+  numLayers := 24,
+  numHeads := 16,
+  is1bitQuant := true,
+  numExperts := 8,
+  activeExperts := 2,
+  projectionConfig := { teacherDim := 8192, studentDim := 2048, latentDim := 256 }
+}
+
+/-- 3. BitMoE E4B-40B モデルプロファイル (40Bクラス 1bit BitMoE) -/
 def profileBitMoE_E4B_40B : ModelProfile := {
   kind := .BitMoE_E4B_40B,
   name := "Lasada-BitMoE-E4B-40B",
@@ -51,7 +65,7 @@ def profileBitMoE_E4B_40B : ModelProfile := {
   projectionConfig := { teacherDim := 3584, studentDim := 4096, latentDim := 512 }
 }
 
-/-- 3. BitMoE 31B-40B モデルプロファイル (40Bクラス 1bit BitMoE) -/
+/-- 4. BitMoE 31B-40B モデルプロファイル (40Bクラス 1bit BitMoE) -/
 def profileBitMoE_31B_40B : ModelProfile := {
   kind := .BitMoE_31B_40B,
   name := "Lasada-BitMoE-31B-40B",
@@ -64,7 +78,7 @@ def profileBitMoE_31B_40B : ModelProfile := {
   projectionConfig := { teacherDim := 8192, studentDim := 4096, latentDim := 512 }
 }
 
-/-- 4. BitMoE 31B-70B モデルプロファイル (70Bクラス 1bit BitMoE) -/
+/-- 5. BitMoE 31B-70B モデルプロファイル (70Bクラス 1bit BitMoE) -/
 def profileBitMoE_31B_70B : ModelProfile := {
   kind := .BitMoE_31B_70B,
   name := "Lasada-BitMoE-31B-70B",
@@ -80,6 +94,7 @@ def profileBitMoE_31B_70B : ModelProfile := {
 /-- ターゲットモデルの一覧 -/
 def targetProfiles : List ModelProfile := [
   profileBitMoE_E4B_Base,
+  profileBitMoE_31B_Base,
   profileBitMoE_E4B_40B,
   profileBitMoE_31B_40B,
   profileBitMoE_31B_70B

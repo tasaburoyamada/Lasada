@@ -26,6 +26,11 @@ PROFILES = [
         "teacher_gemma": "gemma-4-E4B", "teacher_jp": "llm-jp-4-8b-instruct"
     },
     {
+        "name": "Lasada-BitMoE-31B-Base",
+        "student_dim": 2048, "num_layers": 24, "num_heads": 16, "num_experts": 8, "active_experts": 2,
+        "teacher_gemma": "gemma-4-31B", "teacher_jp": "llm-jp-4-32b-a3b-thinking"
+    },
+    {
         "name": "Lasada-BitMoE-E4B-40B",
         "student_dim": 4096, "num_layers": 32, "num_heads": 32, "num_experts": 8, "active_experts": 2,
         "teacher_gemma": "gemma-4-E4B", "teacher_jp": "llm-jp-4-32b-a3b-thinking"
