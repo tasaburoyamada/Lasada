@@ -28,10 +28,10 @@ graph TD
 
 | コンポーネント | 責務 | 関連 Lean モジュール |
 | :--- | :--- | :--- |
-| **`Symbol32`** | 4bit/32bit 固定幅シンボル空間管理、文字コードパースの境界分断排除 | `Lasada.Tokenizer` |
-| **`lbir`** | Lean 4 上での中間表現（LBIR）パケット（識別子 `0x341`, `0x342`）生成およびバイトコード変換 | `Lasada.CodeGen` |
-| **`nomos`** | トークナイザ境界不変条件 (`Nomos.Contract`) および蒸留損失減衰法則 (`Nomos.Laws`) の証明 | `Lasada.Tokenizer`, `Lasada.DistillHB` |
-| **`Lyceum`** | 推論コンテキスト (`MemoryMappedContext`) および MCP (Model Context Protocol) 統合 | `Lasada.DistillWB`, `Lasada.CodeGen` |
+| **`Symbol32`** | 4bit/32bit 固定幅シンボル空間管理、文字コードパースの境界分断排除 | [`Lasada.Tokenizer`](file:///home/tasaburoyamada/sandbox/Lasada/Lasada/Tokenizer.lean) |
+| **`lbir` / `CodeGen`** | C++20/AVX-512、Triton GPU、および Symbol32 `.sreg` バイナリパケットの生成 | [`Lasada.CodeGen`](file:///home/tasaburoyamada/sandbox/Lasada/Lasada/CodeGen.lean) |
+| **`Nomos`** | トークナイザ境界不変条件契約および蒸留損失減衰法則の証明 | [`Lasada.Tokenizer`](file:///home/tasaburoyamada/sandbox/Lasada/Lasada/Tokenizer.lean), [`Lasada.DistillHB`](file:///home/tasaburoyamada/sandbox/Lasada/Lasada/DistillHB.lean) |
+| **`Lyceum`** | 推論コンテキスト (`MemoryMappedContext`) ストリーミングデータ展開および BitLinear 量子化統合 | [`Lasada.DistillWB`](file:///home/tasaburoyamada/sandbox/Lasada/Lasada/DistillWB.lean), [`Lasada.CodeGen`](file:///home/tasaburoyamada/sandbox/Lasada/Lasada/CodeGen.lean) |
 
 ---
 
@@ -39,16 +39,16 @@ graph TD
 
 ### Phase 1: アジア優先トークナイザ (Asian-Priority Tokenizer)
 - 英語中心の BPE の欠陥を排除し、日本語（ひらがな/カタカナ/常用漢字）および CJKV/ベトナム語の初期語彙空間を予約。
-- マージ重み計算時に言語別バイアス（日本語 ×10, CJKV ×5, アジア ×2, 欧州 ×1）を適用。
+- `classifyCodePoint` による分類および `mergeSubwordPairs` による BPE サブワード結合プログラムを純粋 Lean 4 で完全実装。
 
 ### Phase 2: Gemma 4 ホワイトボックス射影蒸留 (WB Projection Distillation)
-- Gemma 4 (E4B / 31B) の高次元隠れ状態（$H_1 = 3584 / 8192$）を低ランク潜在空間（$L = 256$）へ射影し、生徒モデル隠れ状態（$H_2 = 2048$）へ同期。
-- FLOPS コスト $O(V_{\text{teacher}} \cdot L + L \cdot V_{\text{student}})$ での転写。
+- Gemma 4 (E4B / 31B) の高次元隠れ状態を低ランク潜在空間（$L = 256$）へ射影し、生徒モデル隠れ状態（$H_2 = 2048$）へ同期。
+- `Lyceum.MemoryMappedContext` から物理メモリ・ファイル上のバイトバッファを直接フェッチする `fetchHiddenSegment` ストリーミング展開プログラムを完備。
 
 ### Phase 3: 日本語半ブラックボックスアライメント (HB Alignment)
-- 日本語特化高アライメントモデルからの Soft-label (Top-K=20) 転写および DPO (Direct Preference Optimization) による価値観矯正。
+- Soft-label 転写および DPO (Direct Preference Optimization) 損失計算 `computeDPOLoss` による純粋 Lean 4 価値観矯正プログラム。
 
 ---
 
 ## 4. 品質保証規約
-- すべてのパイプラインモジュールは Lean 4 型システムおよび `Nomos` 不変条件テストを通過しなければならず、静的型エラーが存在する状態でのコード生成は禁止される。
+- すべてのパイプラインモジュールは Lean 4 型システムを通過し、`lake build` および `./.lake/build/bin/test_lasada` による全 16 項目の自動アサーション検証を静的・動的に実証しなければならない。
