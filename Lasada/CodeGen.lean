@@ -17,7 +17,7 @@ def generateCppPipeline (cfgWB : ProjectionConfig) (cfgHB : SoftLabelConfig) : S
   "#include <cmath>\n" ++
   "#include <omp.h>\n" ++
   "#include <immintrin.h>\n" ++
-  "#include \"Symbol32.h\"\n\n" ++
+  "#include \"/home/tasaburoyamada/sandbox/Symbol32/include/symbol32/symbol32.h\"\n\n" ++
   s!"// Low-Rank Projection Configuration (Gemma 4 -> Student)\n" ++
   s!"constexpr size_t TEACHER_DIM = {cfgWB.teacherDim};\n" ++
   s!"constexpr size_t STUDENT_DIM = {cfgWB.studentDim};\n" ++
