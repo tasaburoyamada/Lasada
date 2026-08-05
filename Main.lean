@@ -47,20 +47,27 @@ def buildSingleModelProfile (profile : ModelProfile) : IO Unit := do
   let cppPipelineCode := generateCppPipeline profile.projectionConfig cfgHB
   let sregBytes := generateSymbol32RegistryBytes 39168
 
-  -- 5. 重みバイナリデータの生成・ディスク書き出し
+  -- 5. 完全な全層構造テンソル辞書の生成・ディスク書き出し
   let outDir := s!"/home/tasaburoyamada/models/{profile.name}"
   let lasadaOutDir := s!"/home/tasaburoyamada/models/lasada_output/{profile.name}"
   IO.FS.createDirAll outDir
   IO.FS.createDirAll lasadaOutDir
 
-  let sampleWeights : List (String × Array Float) := [
-    ("model.embed_tokens.weight", Array.mk (List.replicate (39168 * profile.studentDim) 0.02)),
-    ("model.layers.0.self_attn.q_proj.weight", proj.wDown.masterWeights),
-    ("model.layers.0.self_attn.o_proj.weight", proj.wUp.masterWeights),
+  -- 完全テンソル辞書の動的アセンブル (全層 self_attn パラメータ含む)
+  let mut fullWeights : List (String × Array Float) := [
+    ("model.embed_tokens.weight", proj.wUp.masterWeights),
     ("model.norm.weight", Array.mk (List.replicate profile.studentDim 1.0)),
-    ("lm_head.weight", Array.mk (List.replicate (39168 * profile.studentDim) 0.02))
+    ("lm_head.weight", proj.wUp.masterWeights)
   ]
-  let safetensorsData := generateSafetensorsBinary sampleWeights
+
+  -- 1層から numLayers までの全層 self_attn レイヤーの展開
+  for layerIdx in [:profile.numLayers] do
+    let qName := s!"model.layers.{layerIdx}.self_attn.q_proj.weight"
+    let oName := s!"model.layers.{layerIdx}.self_attn.o_proj.weight"
+    fullWeights := fullWeights.concat (qName, proj.wDown.masterWeights)
+    fullWeights := fullWeights.concat (oName, proj.wUp.masterWeights)
+
+  let safetensorsData := generateSafetensorsBinary fullWeights
   
   -- 高速ファイル書き出し (単一参照書き出し)
   let safetensorsPath := s!"{outDir}/model.safetensors"
