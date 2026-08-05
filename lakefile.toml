@@ -18,4 +18,8 @@ root = "TestLasada"
 name = "build_all_models"
 root = "Main"
 
+[[lean_exe]]
+name = "evaluate_models"
+root = "Evaluate"
+
 
