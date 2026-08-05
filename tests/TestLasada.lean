@@ -35,12 +35,22 @@ def main : IO Unit := do
   let encodedTokens := encodeCodePoints testCodePoints
   assertTest "Symbol32 Encode CodePoints Output Size == 4" (encodedTokens.size == 4)
 
+  -- テスト 3.1: BPE サブワード結合プログラム検証
+  let bpeRule : BPEMergeRule := { pairLeft := 256, pairRight := 257, mergedId := 9000, weight := 10 }
+  let mergedTokens := mergeSubwordPairs #[256, 257, 258] [bpeRule]
+  assertTest "BPE Merge Subword Pair Success (256, 257 -> 9000)" (mergedTokens == #[9000, 258])
+
   -- テスト 4: Gemma 4 低ランク射影 Forward テンソルアライメント計算検証
   let cfgWB : ProjectionConfig := { teacherDim := 3584, studentDim := 2048, latentDim := 256 }
   let proj := createLowRankProjection cfgWB
   let teacherH : Array Float := Array.mk (List.replicate 3584 0.1)
   let studentH := forwardProjection proj teacherH
   assertTest "LowRankProjection Output Dim == StudentDim (2048)" (studentH.size == 2048)
+
+  -- テスト 4.1: Lyceum MemoryMappedContext からのストリーミングデータ取得検証
+  let mmCtx := Lyceum.MemoryMappedContext.create 16384
+  let fetchedSegment := fetchHiddenSegment mmCtx 0 2048
+  assertTest "MemoryMappedContext Stream Fetch Segment Size == 2048" (match fetchedSegment with | Except.ok arr => arr.size == 2048 | Except.error _ => false)
 
   -- テスト 5: DPO Loss 及び Nomos Laws 蒸留ステップ計算プログラム検証
   let dpoLoss := computeDPOLoss 0.8 0.2 0.5 0.5 0.1

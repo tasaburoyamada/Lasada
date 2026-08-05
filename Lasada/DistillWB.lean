@@ -2,6 +2,7 @@ import Lyceum.Types
 import Lyceum.Inference
 import Lyceum.Training.Distillation
 import Lyceum.Training.BitLinear
+import Lyceum.MemoryMapped
 
 namespace Lasada.DistillWB
 
@@ -52,6 +53,23 @@ def forwardProjection (proj : LowRankProjectionWeights) (hTeacher : Array Float)
   -- 2. LatentDim -> StudentDim
   let hStudent := forwardBitLinear proj.wUp hLatent
   return hStudent
+
+/-- MemoryMappedContext から隠れ層テンソルセグメントをストリーミング読み出しを行うプログラム -/
+def fetchHiddenSegment (ctx : MemoryMappedContext) (offset : Nat) (dim : Nat) : Except String (Array Float) :=
+  match ctx.fetchSegment offset (dim * 4) with
+  | Except.ok bytes => Except.ok (Id.run do
+      let mut floats : Array Float := #[]
+      let mut i := 0
+      while i + 4 <= bytes.size do
+        let b0 := (bytes.get! i).toNat
+        let b1 := (bytes.get! (i+1)).toNat
+        let b2 := (bytes.get! (i+2)).toNat
+        let b3 := (bytes.get! (i+3)).toNat
+        let val := (b0 + b1 * 256 + b2 * 65536 + b3 * 16777216).toFloat * 1e-6
+        floats := floats.push val
+        i := i + 4
+      return floats)
+  | Except.error e => Except.error e
 
 /-- Lyceum 推論コンテキストとの統合設定生成 -/
 def toLyceumRequestOptions (_cfg : ProjectionConfig) : LlmRequestOptions :=

@@ -55,6 +55,41 @@ def encodeCodePoints (codePoints : Array UInt32) (ranges : List SymbolRange := d
       tokens := tokens.push (cp.toNat % 1000 + 37120)
   return tokens
 
+/-- BPE サブワード結合ルール構造体 -/
+structure BPEMergeRule where
+  pairLeft  : Nat
+  pairRight : Nat
+  mergedId  : Nat
+  weight    : Nat
+  deriving Inhabited, BEq, Repr
+
+/-- BPE 最長・最高重みペアの連続結合（Subword Merge）アルゴリズムプログラム -/
+def mergeSubwordPairs (tokens : Array Nat) (rules : List BPEMergeRule) : Array Nat := Id.run do
+  if tokens.size < 2 then return tokens
+  let mut current := tokens
+  let mut changed := true
+  while changed do
+    changed := false
+    let mut i := 0
+    let mut nextTokens : Array Nat := #[]
+    while i < current.size do
+      if i + 1 < current.size then
+        let left := current.getD i 0
+        let right := current.getD (i + 1) 0
+        match rules.find? (fun r => r.pairLeft == left && r.pairRight == right) with
+        | some rule =>
+          nextTokens := nextTokens.push rule.mergedId
+          i := i + 2
+          changed := true
+        | none =>
+          nextTokens := nextTokens.push left
+          i := i + 1
+      else
+        nextTokens := nextTokens.push (current.getD i 0)
+        i := i + 1
+    current := nextTokens
+  return current
+
 /-- Nomos 契約: トークナイザの不変条件（語彙範囲の重複・非負バウンダリ）を検証する判定プログラム -/
 def checkTokenizerContract (ranges : List SymbolRange) : Bool :=
   ranges.all (fun r => r.startCode < r.endCode && r.reservedVocabCount > 0)
