@@ -14,4 +14,8 @@ name = "test_lasada"
 srcDir = "tests"
 root = "TestLasada"
 
+[[lean_exe]]
+name = "build_31b_4b"
+root = "Main"
+
 
