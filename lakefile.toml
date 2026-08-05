@@ -3,14 +3,6 @@ version = "0.1.0"
 defaultTargets = ["Lasada", "test_lasada"]
 
 [[require]]
-name = "lbir"
-path = "../lbir"
-
-[[require]]
-name = "nomos"
-path = "../nomos"
-
-[[require]]
 name = "lyceum"
 path = "../Lyceum"
 

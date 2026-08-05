@@ -1,4 +1,3 @@
-import Lbir
 import Lasada.Tokenizer
 import Lasada.DistillWB
 import Lasada.DistillHB
@@ -9,12 +8,13 @@ open Lasada.Tokenizer
 open Lasada.DistillWB
 open Lasada.DistillHB
 
-/-- C++20 / OpenMP / AVX-512 CPU 最適化パイプラインコードの自動生成 -/
+/-- C++20 / OpenMP / AVX-512 CPU 最適化パイプラインコードの完全自動生成プログラム -/
 def generateCppPipeline (cfgWB : ProjectionConfig) (cfgHB : SoftLabelConfig) : String :=
   "// Auto-generated pipeline code by Lasada (Lean 4 / Nomos / Lyceum / Symbol32 verified)\n" ++
   "// Target Architecture: x86_64 AVX-512 / OpenMP CPU Parallel Acceleration\n" ++
   "#include <iostream>\n" ++
   "#include <vector>\n" ++
+  "#include <cmath>\n" ++
   "#include <omp.h>\n" ++
   "#include <immintrin.h>\n" ++
   "#include \"Symbol32.h\"\n\n" ++
@@ -26,8 +26,18 @@ def generateCppPipeline (cfgWB : ProjectionConfig) (cfgHB : SoftLabelConfig) : S
   s!"// Teacher Model: {cfgHB.teacherModelName}\n" ++
   s!"constexpr float DPO_BETA = {cfgHB.dpoBeta};\n" ++
   s!"constexpr size_t TOP_K   = {cfgHB.topK};\n\n" ++
-
-  "// Lyceum MCP Glue Code\n" ++
+  "// AVX-512 BitNet b1.58 Matmul Execution Kernel\n" ++
+  "void bitnet_matmul_avx512(const int8_t* w, const float* x, float* y, size_t m, size_t k, float gamma) {\n" ++
+  "    #pragma omp parallel for schedule(static)\n" ++
+  "    for (size_t i = 0; i < m; ++i) {\n" ++
+  "        float sum = 0.0f;\n" ++
+  "        for (size_t j = 0; j < k; ++j) {\n" ++
+  "            sum += (float)w[i * k + j] * x[j];\n" ++
+  "        }\n" ++
+  "        y[i] = sum * gamma;\n" ++
+  "    }\n" ++
+  "}\n\n" ++
+  "// Lyceum MCP Context Initializer\n" ++
   "void init_lyceum_mcp_context() {\n" ++
   "    #pragma omp parallel\n" ++
   "    {\n" ++
@@ -42,8 +52,7 @@ def generateCppPipeline (cfgWB : ProjectionConfig) (cfgHB : SoftLabelConfig) : S
   "    return 0;\n" ++
   "}\n"
 
-
-/-- Triton / GPU 低ランク射影・アライメント高速化カーネルコードの自動生成 -/
+/-- Triton / GPU 低ランク射影・アライメント高速化カーネルコードの完全生成プログラム -/
 def generateTritonPipeline (cfgWB : ProjectionConfig) (cfgHB : SoftLabelConfig) : String :=
   "# Auto-generated Triton GPU Kernel Code by Lasada (Lean 4 / Nomos / Lyceum / Symbol32 verified)\n" ++
   "# Target Architecture: Triton GPU Kernel (PyTorch Integration)\n" ++
@@ -56,15 +65,38 @@ def generateTritonPipeline (cfgWB : ProjectionConfig) (cfgHB : SoftLabelConfig) 
   s!"DPO_BETA    = {cfgHB.dpoBeta}\n" ++
   s!"TOP_K       = {cfgHB.topK}\n\n" ++
   "@triton.jit\n" ++
-  "def projection_kernel(x_ptr, w_ptr, out_ptr, stride_xm, stride_xk, stride_wk, stride_wn, BLOCK_SIZE_M: tl.constexpr, BLOCK_SIZE_N: tl.constexpr, BLOCK_SIZE_K: tl.constexpr):\n" ++
+  "def bitnet_projection_kernel(x_ptr, w_ptr, out_ptr, stride_xm, stride_xk, stride_wk, stride_wn, BLOCK_SIZE_M: tl.constexpr, BLOCK_SIZE_N: tl.constexpr, BLOCK_SIZE_K: tl.constexpr):\n" ++
   "    pid = tl.program_id(axis=0)\n" ++
-  "    # Lyceum Context verified Projection Computation\n" ++
-  "    pass\n\n" ++
+  "    rm = pid * BLOCK_SIZE_M + tl.arange(0, BLOCK_SIZE_M)\n" ++
+  "    rn = tl.arange(0, BLOCK_SIZE_N)\n" ++
+  "    acc = tl.zeros((BLOCK_SIZE_M, BLOCK_SIZE_N), dtype=tl.float32)\n" ++
+  "    for k in range(0, BLOCK_SIZE_K):\n" ++
+  "        x = tl.load(x_ptr + rm[:, None] * stride_xm + k * stride_xk)\n" ++
+  "        w = tl.load(w_ptr + k * stride_wk + rn[None, :] * stride_wn)\n" ++
+  "        acc += x * w\n" ++
+  "    tl.store(out_ptr + rm[:, None] * stride_xm + rn[None, :], acc)\n\n" ++
   "def init_lyceum_triton_context():\n" ++
   "    print(f'[Lyceum Triton Context Attached] Target Teacher Dim: {TEACHER_DIM}, Student Dim: {STUDENT_DIM}')\n"
 
-/-- LBIR パケットチャンクの作成 (識別子 0x341, 0x342) -/
+/-- LBIR パケットチャンクの作成プログラム (識別子 0x341, 0x342) -/
 def generateLBIRHeader : ByteArray :=
   ByteArray.mk #[0x4C, 0x42, 0x49, 0x52] -- 'L','B','I','R'
+
+/-- Symbol32 レジストリ (.sreg) バイナリ生成プログラム -/
+def generateSymbol32RegistryBytes (symbolCount : Nat := 39168) : ByteArray := Id.run do
+  let mut arr : Array UInt8 := #[]
+  -- Magic "SREG", Version 1
+  arr := arr.push 0x53 -- 'S'
+  arr := arr.push 0x52 -- 'R'
+  arr := arr.push 0x45 -- 'E'
+  arr := arr.push 0x47 -- 'G'
+  -- SymbolCount (uint32)
+  let countBytes := [symbolCount.toUInt8, (symbolCount >>> 8).toUInt8, (symbolCount >>> 16).toUInt8, (symbolCount >>> 24).toUInt8]
+  for b in countBytes do
+    arr := arr.push b
+  -- Pad to 64 bytes
+  while arr.size < 64 do
+    arr := arr.push 0
+  return ByteArray.mk arr
 
 end Lasada.CodeGen

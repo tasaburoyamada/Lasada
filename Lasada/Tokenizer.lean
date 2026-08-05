@@ -1,9 +1,4 @@
-import Nomos.Contract
-
 namespace Lasada.Tokenizer
-
-open Nomos
-
 
 /-- 言語別優先度定義 -/
 inductive LangPriority where
@@ -13,7 +8,7 @@ inductive LangPriority where
   | European     : LangPriority -- 優先度4: 欧州言語
   deriving Inhabited, BEq, Repr
 
-/-- Symbol32コードポイント範囲を表す構造体 -/
+/-- Symbol32コードポイント範囲構造体 -/
 structure SymbolRange where
   lang : LangPriority
   startCode : UInt32
@@ -31,7 +26,7 @@ def defaultSymbolRanges : List SymbolRange := [
   { lang := .European,  startCode := 0x0020, endCode := 0x007F, reservedVocabStart := 37120, reservedVocabCount := 2048 }  -- ASCII
 ]
 
-/-- マージルールの重み計算（言語優先度に基づくバイアス適用） -/
+/-- マージ重み計算プログラム (言語優先度に応じたバイアス適用) -/
 def computeMergeWeight (lang : LangPriority) (rawFreq : Nat) : Nat :=
   match lang with
   | .Japanese  => rawFreq * 10
@@ -39,7 +34,28 @@ def computeMergeWeight (lang : LangPriority) (rawFreq : Nat) : Nat :=
   | .OtherAsia => rawFreq * 2
   | .European  => rawFreq * 1
 
-/-- Nomos 契約: トークナイザの不変条件（語彙範囲の重複・非負バウンダリ）を検証 -/
+/-- コードポイントから LangPriority の判定アルゴリズム -/
+def classifyCodePoint (cp : UInt32) (ranges : List SymbolRange := defaultSymbolRanges) : LangPriority :=
+  match ranges.find? (fun r => cp >= r.startCode && cp <= r.endCode) with
+  | some r => r.lang
+  | none   => LangPriority.European
+
+/-- Symbol32 トークナイズ処理: コードポイント配列から予約 ID へのマッピングプログラム -/
+def encodeCodePoints (codePoints : Array UInt32) (ranges : List SymbolRange := defaultSymbolRanges) : Array Nat := Id.run do
+  let mut tokens : Array Nat := #[]
+  for cp in codePoints do
+    let lang := classifyCodePoint cp ranges
+    let matchedRange := ranges.find? (fun r => r.lang == lang && cp >= r.startCode && cp <= r.endCode)
+    match matchedRange with
+    | some r =>
+      let offset := (cp - r.startCode).toNat
+      let tokenId := r.reservedVocabStart + (offset % r.reservedVocabCount)
+      tokens := tokens.push tokenId
+    | none =>
+      tokens := tokens.push (cp.toNat % 1000 + 37120)
+  return tokens
+
+/-- Nomos 契約: トークナイザの不変条件（語彙範囲の重複・非負バウンダリ）を検証する判定プログラム -/
 def checkTokenizerContract (ranges : List SymbolRange) : Bool :=
   ranges.all (fun r => r.startCode < r.endCode && r.reservedVocabCount > 0)
 
