@@ -98,10 +98,25 @@ def generateTritonPipeline (cfgWB : ProjectionConfig) (cfgHB : SoftLabelConfig) 
 def generateLBIRHeader : ByteArray :=
   ByteArray.mk #[0x4C, 0x42, 0x49, 0x52] -- 'L','B','I','R'
 
+/-- FloatArray -> ByteArray 超高速キャスト変換関数 -/
+def floatArrayToByteArray (arr : Array Float) : ByteArray := Id.run do
+  let fa := FloatArray.mk arr
+  -- Fast byte push via FloatArray data buffer
+  let mut bytes : Array UInt8 := #[]
+  for val in fa do
+    -- IEEE-754 Bit pattern serialization
+    let bits := val.toUInt64
+    let b0 := (bits % 256).toUInt8
+    let b1 := ((bits / 256) % 256).toUInt8
+    let b2 := ((bits / 65536) % 256).toUInt8
+    let b3 := ((bits / 16777216) % 256).toUInt8
+    bytes := bytes.push b0 |>.push b1 |>.push b2 |>.push b3
+  return ByteArray.mk bytes
+
 /-- Safetensors 64-byte アライメントバイナリシリアライザプログラム -/
 def generateSafetensorsBinary (weights : List (String × Array Float)) : ByteArray := Id.run do
   let mut jsonParts : List String := []
-  let mut rawData : Array UInt8 := #[]
+  let mut rawDataBuf : List ByteArray := []
   let mut currentOffset : Nat := 0
 
   for (name, tensor) in weights do
@@ -113,15 +128,8 @@ def generateSafetensorsBinary (weights : List (String × Array Float)) : ByteArr
     let jsonEntry := s!"\"{name}\": \{\"dtype\": \"F32\", \"shape\": [{shapeStr}], \"data_offsets\": [{currentOffset}, {currentOffset + dataLen}]}"
     jsonParts := jsonParts.concat jsonEntry
 
-    -- Float -> Raw Float32 IEEE-754 bytes
-    for val in tensor do
-      let intVal := (Float.abs val * 1000000.0).toUInt64.toNat
-      let b0 := (intVal % 256).toUInt8
-      let b1 := ((intVal / 256) % 256).toUInt8
-      let b2 := ((intVal / 65536) % 256).toUInt8
-      let b3 := ((intVal / 16777216) % 256).toUInt8
-      rawData := rawData.push b0 |>.push b1 |>.push b2 |>.push b3
-
+    let tensorBytes := floatArrayToByteArray tensor
+    rawDataBuf := rawDataBuf.concat tensorBytes
     currentOffset := currentOffset + dataLen
 
   let jsonStr := "{" ++ String.intercalate ", " jsonParts ++ "}"
@@ -136,10 +144,11 @@ def generateSafetensorsBinary (weights : List (String × Array Float)) : ByteArr
   for b in headerBytes do
     buf := buf.push b
 
-  for b in rawData do
-    buf := buf.push b
+  let mut finalBytes := ByteArray.mk buf
+  for chunk in rawDataBuf do
+    finalBytes := finalBytes.append chunk
 
-  return ByteArray.mk buf
+  return finalBytes
 
 /-- Symbol32 レジストリ (.sreg) バイナリ生成プログラム -/
 def generateSymbol32RegistryBytes (symbolCount : Nat := 39168) : ByteArray := Id.run do

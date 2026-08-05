@@ -63,7 +63,7 @@ def buildSingleModelProfile (profile : ModelProfile) : IO Unit := do
   IO.FS.writeFile cppPath cppPipelineCode
   IO.FS.writeBinFile sregPath sregBytes
 
-  -- 同期パス書き出し
+  -- lasada_output パスへの高速書き込み (同一バイナリ再利用)
   IO.FS.writeBinFile s!"{lasadaOutDir}/model.safetensors" safetensorsData
   IO.FS.writeFile s!"{lasadaOutDir}/pipeline_native.cpp" cppPipelineCode
   IO.FS.writeBinFile s!"{lasadaOutDir}/tokenizer.sreg" sregBytes
