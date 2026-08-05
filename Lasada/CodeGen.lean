@@ -15,9 +15,7 @@ def generateCppPipeline (cfgWB : ProjectionConfig) (cfgHB : SoftLabelConfig) : S
   "#include <iostream>\n" ++
   "#include <vector>\n" ++
   "#include <cmath>\n" ++
-  "#include <omp.h>\n" ++
-  "#include <immintrin.h>\n" ++
-  "#include \"/home/tasaburoyamada/sandbox/Symbol32/include/symbol32/symbol32.h\"\n\n" ++
+  "#include \"symbol32/Symbol32.h\"\n\n" ++
   s!"// Low-Rank Projection Configuration (Gemma 4 -> Student)\n" ++
   s!"constexpr size_t TEACHER_DIM = {cfgWB.teacherDim};\n" ++
   s!"constexpr size_t STUDENT_DIM = {cfgWB.studentDim};\n" ++
@@ -108,7 +106,10 @@ def generateSafetensorsBinary (weights : List (String × Array Float)) : ByteArr
 
   for (name, tensor) in weights do
     let dataLen := tensor.size * 4
-    let shapeStr := if name == "model.embed_tokens.weight" then s!"39168, {tensor.size / 39168}" else s!"{tensor.size}"
+    let shapeStr := if name == "model.embed_tokens.weight" || name == "lm_head.weight" then s!"39168, {tensor.size / 39168}"
+                    else if name == "model.layers.0.self_attn.q_proj.weight" then s!"256, 8192"
+                    else if name == "model.layers.0.self_attn.o_proj.weight" then s!"2048, 256"
+                    else s!"{tensor.size}"
     let jsonEntry := s!"\"{name}\": \{\"dtype\": \"F32\", \"shape\": [{shapeStr}], \"data_offsets\": [{currentOffset}, {currentOffset + dataLen}]}"
     jsonParts := jsonParts.concat jsonEntry
 

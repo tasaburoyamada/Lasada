@@ -91,9 +91,13 @@ def profileBitMoE_31B_70B : ModelProfile := {
   projectionConfig := { teacherDim := 8192, studentDim := 8192, latentDim := 1024 }
 }
 
-/-- ターゲットモデルの一覧 (現在は Lasada-BitMoE-31B-Base 1つに単一化・集中) -/
+/-- ターゲットモデルの一覧 (全5モデル) -/
 def targetProfiles : List ModelProfile := [
-  profileBitMoE_31B_Base
+  profileBitMoE_E4B_Base,
+  profileBitMoE_31B_Base,
+  profileBitMoE_E4B_40B,
+  profileBitMoE_31B_40B,
+  profileBitMoE_31B_70B
 ]
 
 end Lasada.ModelSpec
