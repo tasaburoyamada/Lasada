@@ -1,0 +1,61 @@
+{
+  "lasada_version": "1.0.0",
+  "default_teacher_gemma_path": "/home/tasaburoyamada/models/gemma-4-31B",
+  "default_teacher_japanese_path": "/home/tasaburoyamada/models/llm-jp-4-32b-a3b-thinking",
+  "numa_threads": 32,
+  "enable_avx512_simd": true,
+  "enable_flash_attention_v2": true,
+  "gamma_min_clip": 0.00001,
+  "profiles": [
+    {
+      "name": "Lasada-BitMoE-E4B-Base",
+      "student_dim": 2048,
+      "num_layers": 24,
+      "num_heads": 16,
+      "num_experts": 8,
+      "active_experts": 2,
+      "teacher_dim": 3584,
+      "latent_dim": 256
+    },
+    {
+      "name": "Lasada-BitMoE-31B-Base",
+      "student_dim": 2048,
+      "num_layers": 24,
+      "num_heads": 16,
+      "num_experts": 8,
+      "active_experts": 2,
+      "teacher_dim": 8192,
+      "latent_dim": 256
+    },
+    {
+      "name": "Lasada-BitMoE-E4B-40B",
+      "student_dim": 4096,
+      "num_layers": 32,
+      "num_heads": 32,
+      "num_experts": 8,
+      "active_experts": 2,
+      "teacher_dim": 3584,
+      "latent_dim": 512
+    },
+    {
+      "name": "Lasada-BitMoE-31B-40B",
+      "student_dim": 4096,
+      "num_layers": 32,
+      "num_heads": 32,
+      "num_experts": 8,
+      "active_experts": 2,
+      "teacher_dim": 8192,
+      "latent_dim": 512
+    },
+    {
+      "name": "Lasada-BitMoE-31B-70B",
+      "student_dim": 8192,
+      "num_layers": 64,
+      "num_heads": 64,
+      "num_experts": 16,
+      "active_experts": 2,
+      "teacher_dim": 8192,
+      "latent_dim": 1024
+    }
+  ]
+}

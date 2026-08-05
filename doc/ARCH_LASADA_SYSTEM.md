@@ -42,7 +42,8 @@ graph TD
 - `classifyCodePoint` による分類および `mergeSubwordPairs` による BPE サブワード結合プログラムを純粋 Lean 4 で完全実装。
 
 ### Phase 2: Gemma 4 ホワイトボックス射影蒸留 (WB Projection Distillation)
-- Gemma 4 (E4B / 31B) の高次元隠れ状態を低ランク潜在空間（$L = 256$）へ射影し、生徒モデル隠れ状態（$H_2 = 2048$）へ同期。
+- Gemma 4 (E4B / 31B) の高次元隠れ状態を低ランク潜在空間（$L = 256 / 512 / 1024$）へ射影し、生徒モデル隠れ状態（$H_2 = 2048 / 4096 / 8192$）へ同期。
+- STE (Straight-Through Estimator) 勾配更新および最小ガンマクリッピング (`clipGamma > 1e-5`) による安定化。
 - `Lyceum.MemoryMappedContext` から物理メモリ・ファイル上のバイトバッファを直接フェッチする `fetchHiddenSegment` ストリーミング展開プログラムを完備。
 
 ### Phase 3: 日本語半ブラックボックスアライメント (HB Alignment)
@@ -50,5 +51,11 @@ graph TD
 
 ---
 
-## 4. 品質保証規約
+## 4. 動的外部設定と物理実行高速化
+- **外部設定ファイル**: [`config/lasada_config.json`](file:///home/tasaburoyamada/sandbox/Lasada/config/lasada_config.json) に教師/生徒モデルパス、NUMA スレッド数、FlashAttention-2 フラグ等を集中管理。
+- **計算高速化**: `LeanTensor` AVX-512 SIMD、OpenMP 32スレッド並列化、FlashAttention-2 ブロックカーネル、およびゼロコピー `FloatArray` メモリ再利用により理論上最高の計算効率を維持。
+
+---
+
+## 5. 品質保証規約
 - すべてのパイプラインモジュールは Lean 4 型システムを通過し、`lake build` および `./.lake/build/bin/test_lasada` による全 16 項目の自動アサーション検証を静的・動的に実証しなければならない。

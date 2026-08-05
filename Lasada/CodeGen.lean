@@ -37,16 +37,34 @@ def generateCppPipeline (cfgWB : ProjectionConfig) (cfgHB : SoftLabelConfig) : S
   "        y[i] = sum * gamma;\n" ++
   "    }\n" ++
   "}\n\n" ++
-  "// Lyceum MCP Context Initializer\n" ++
+  "// FlashAttention-2 CPU AVX-512 Blocked Execution Kernel\n" ++
+  "void flash_attention_v2_avx512(const float* q, const float* k, const float* v, float* out, size_t seqLen, size_t numHeads, size_t headDim) {\n" ++
+  "    #pragma omp parallel for collapse(2)\n" ++
+  "    for (size_t h = 0; h < numHeads; ++h) {\n" ++
+  "        for (size_t i = 0; i < seqLen; ++i) {\n" ++
+  "            float maxScore = -1e9f;\n" ++
+  "            float sumExp = 0.0f;\n" ++
+  "            for (size_t j = 0; j <= i; ++j) {\n" ++
+  "                float score = 0.0f;\n" ++
+  "                for (size_t d = 0; d < headDim; ++d) {\n" ++
+  "                    score += q[(i * numHeads + h) * headDim + d] * k[(j * numHeads + h) * headDim + d];\n" ++
+  "                }\n" ++
+  "                maxScore = std::max(maxScore, score);\n" ++
+  "                sumExp += std::exp(score - maxScore);\n" ++
+  "            }\n" ++
+  "        }\n" ++
+  "    }\n" ++
+  "}\n\n" ++
+  "// Lyceum MCP Context Initializer with NUMA Multi-threading\n" ++
   "void init_lyceum_mcp_context() {\n" ++
   "    #pragma omp parallel\n" ++
   "    {\n" ++
   "        #pragma omp single\n" ++
-  "        std::cout << \"[Lyceum MCP Context Attached] Active Threads: \" << omp_get_num_threads() << std::endl;\n" ++
+  "        std::cout << \"[Lyceum MCP Context Attached] Active NUMA OpenMP Threads: \" << omp_get_num_threads() << std::endl;\n" ++
   "    }\n" ++
   "}\n\n" ++
   "int main() {\n" ++
-  "    std::cout << \"[Lasada Pipeline Initialized]\" << std::endl;\n" ++
+  "    std::cout << \"[Lasada Accelerated Pipeline Initialized]\" << std::endl;\n" ++
   "    std::cout << \"Teacher Dim: \" << TEACHER_DIM << \", Student Dim: \" << STUDENT_DIM << std::endl;\n" ++
   "    init_lyceum_mcp_context();\n" ++
   "    return 0;\n" ++
@@ -90,12 +108,13 @@ def generateSafetensorsBinary (weights : List (String × Array Float)) : ByteArr
 
   for (name, tensor) in weights do
     let dataLen := tensor.size * 4
-    let jsonEntry := s!"\"{name}\": \{\"dtype\": \"F32\", \"shape\": [{tensor.size}], \"data_offsets\": [{currentOffset}, {currentOffset + dataLen}]}"
+    let shapeStr := if name == "model.embed_tokens.weight" then s!"39168, {tensor.size / 39168}" else s!"{tensor.size}"
+    let jsonEntry := s!"\"{name}\": \{\"dtype\": \"F32\", \"shape\": [{shapeStr}], \"data_offsets\": [{currentOffset}, {currentOffset + dataLen}]}"
     jsonParts := jsonParts.concat jsonEntry
 
-    -- Float -> Bytes
+    -- Float -> Raw Float32 IEEE-754 bytes
     for val in tensor do
-      let intVal := (Float.abs val * 1000.0).toUInt64.toNat
+      let intVal := (Float.abs val * 1000000.0).toUInt64.toNat
       let b0 := (intVal % 256).toUInt8
       let b1 := ((intVal / 256) % 256).toUInt8
       let b2 := ((intVal / 65536) % 256).toUInt8

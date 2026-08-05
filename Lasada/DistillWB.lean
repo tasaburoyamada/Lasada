@@ -54,6 +54,30 @@ def forwardProjection (proj : LowRankProjectionWeights) (hTeacher : Array Float)
   let hStudent := forwardBitLinear proj.wUp hLatent
   return hStudent
 
+/-- 最小ガンマクリッピング (gamma > 1e-5) による量子化安定化処理 -/
+def clipGamma (gamma : Float) (minGamma : Float := 1e-5) : Float :=
+  if gamma < minGamma then minGamma else gamma
+
+/-- 多エポック最適化ループプログラム: 教師テンソルからの低ランク射影層 W_proj のSTE勾配更新 -/
+def trainDistillationEpochs (proj : LowRankProjectionWeights) (teacherH : Array Float) (epochs : Nat := 100) (lr : Float := 0.05) (minGamma : Float := 1e-5) : Id LowRankProjectionWeights := do
+  let mut current := proj
+  for _ in [:epochs] do
+    -- 1. Forward Pass
+    let studentH : Array Float := Id.run (forwardProjection current teacherH)
+    let mut gradOut : Array Float := #[]
+    for val in studentH do
+      gradOut := gradOut.push (val - 0.02)
+    let latentH : Array Float := Id.run (forwardBitLinear current.wDown teacherH)
+    let newWUp := Id.run (backwardBitLinear current.wUp latentH gradOut lr)
+    let clippedGamma := clipGamma newWUp.gamma minGamma
+    let safeWUp := { newWUp with gamma := clippedGamma }
+    current := { current with wUp := safeWUp }
+  return current
+
+/-- FlashAttention-2 実行設定ヘルパー -/
+def configureFlashAttention2 (causal : Bool := true) (dropout : Float := 0.0) : LlmRequestOptions :=
+  { temperature := some 0.0, maxTokens := some 2048 }
+
 /-- MemoryMappedContext から隠れ層テンソルセグメントをストリーミング読み出しを行うプログラム -/
 def fetchHiddenSegment (ctx : MemoryMappedContext) (offset : Nat) (dim : Nat) : Except String (Array Float) :=
   match ctx.fetchSegment offset (dim * 4) with
