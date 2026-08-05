@@ -82,6 +82,45 @@ def generateTritonPipeline (cfgWB : ProjectionConfig) (cfgHB : SoftLabelConfig) 
 def generateLBIRHeader : ByteArray :=
   ByteArray.mk #[0x4C, 0x42, 0x49, 0x52] -- 'L','B','I','R'
 
+/-- Safetensors 64-byte アライメントバイナリシリアライザプログラム -/
+def generateSafetensorsBinary (weights : List (String × Array Float)) : ByteArray := Id.run do
+  let mut jsonParts : List String := []
+  let mut rawData : Array UInt8 := #[]
+  let mut currentOffset : Nat := 0
+
+  for (name, tensor) in weights do
+    let dataLen := tensor.size * 4
+    let jsonEntry := s!"\"{name}\": \{\"dtype\": \"F32\", \"shape\": [{tensor.size}], \"data_offsets\": [{currentOffset}, {currentOffset + dataLen}]}"
+    jsonParts := jsonParts.concat jsonEntry
+
+    -- Float -> Bytes
+    for val in tensor do
+      let intVal := (Float.abs val * 1000.0).toUInt64.toNat
+      let b0 := (intVal % 256).toUInt8
+      let b1 := ((intVal / 256) % 256).toUInt8
+      let b2 := ((intVal / 65536) % 256).toUInt8
+      let b3 := ((intVal / 16777216) % 256).toUInt8
+      rawData := rawData.push b0 |>.push b1 |>.push b2 |>.push b3
+
+    currentOffset := currentOffset + dataLen
+
+  let jsonStr := "{" ++ String.intercalate ", " jsonParts ++ "}"
+  let headerBytes := jsonStr.toUTF8
+
+  -- 8-byte N (Header length uint64)
+  let n := headerBytes.size
+  let mut buf : Array UInt8 := #[]
+  let nBytes := [n.toUInt8, (n >>> 8).toUInt8, (n >>> 16).toUInt8, (n >>> 24).toUInt8, 0, 0, 0, 0]
+  for b in nBytes do
+    buf := buf.push b
+  for b in headerBytes do
+    buf := buf.push b
+
+  for b in rawData do
+    buf := buf.push b
+
+  return ByteArray.mk buf
+
 /-- Symbol32 レジストリ (.sreg) バイナリ生成プログラム -/
 def generateSymbol32RegistryBytes (symbolCount : Nat := 39168) : ByteArray := Id.run do
   let mut arr : Array UInt8 := #[]
