@@ -15,7 +15,7 @@ srcDir = "tests"
 root = "TestLasada"
 
 [[lean_exe]]
-name = "build_31b_4b"
-root = "Main"
+name = "evaluate_models"
+root = "Evaluate"
 
 
