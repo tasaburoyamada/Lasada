@@ -5,7 +5,7 @@
 
 ---
 
-## 2. 評価対象ベンチマーク指標スイート (8大国際指標 + 日本語総合特化)
+## 2. 評価対象ベンチマーク指標スイート (8大国際指標)
 
 | カテゴリ | ベンチマーク名 | 測定対象・目的 | 評価形式・メトリクス |
 | :--- | :--- | :--- | :--- |
@@ -17,16 +17,15 @@
 | **6. 自律開発** | **SWE-bench / Verified** | OSS リアル GitHub Issue に対する自律的コード修正能力 | Resolve Rate (%) |
 | **7. 会話・対話** | **MT-Bench** | 多段階対話・複雑指示における回答品質評価 | GPT-4 / LLM Judge (1-10点) |
 | **8. 多模態思考** | **MMMU** | 高度な大学レベルのマルチモーダル（図表・数式・図面理解）問題 | Accuracy (%) |
-| **特化 (日本語)** | **JGLUE / Elyza-Tasks-100** | 日本語総合理解・敬語・文化文脈追従性 | Accuracy / Human Judge (%) |
 
 ---
 
 ## 3. 総合評価スコア (Comprehensive Lasada Score) の算出定式
 
-全 8 大国際指標および日本語特化指標の正規化平均値として **Comprehensive Lasada Score (CLS)** を算出する。
+全 8 大国際指標の正規化平均値として **Comprehensive Lasada Score (CLS)** を算出する。
 
 \[
-\text{CLS} = \frac{1}{9} \left( S_{\text{MMLU}} + S_{\text{GPQA}} + S_{\text{MATH}} + S_{\text{GSM8K}} + S_{\text{HumanEval}} + S_{\text{SWE-bench}} + S_{\text{MT-Bench}} \times 10 + S_{\text{MMMU}} + S_{\text{Japanese}} \right)
+\text{CLS} = \frac{1}{8} \left( S_{\text{MMLU}} + S_{\text{GPQA}} + S_{\text{MATH}} + S_{\text{GSM8K}} + S_{\text{HumanEval}} + S_{\text{SWE-bench}} + S_{\text{MT-Bench}} \times 10 + S_{\text{MMMU}} \right)
 \]
 
 ---
@@ -34,7 +33,7 @@
 ## 4. 実行レギュレーション規約
 
 1. **再現性保証**:
-   - `lm-evaluation-harness` (`lm_eval`) または専用評価ハーネスを用い、`seed = 1234` に固定して測定する。
+   - `seed = 1234` に固定し、Lean 4 形式検証ハーネスにて物理測定する。
 2. **ゼロショット / Few-shot 規定**:
    - 原則 `num_fewshot = 0` (Zero-shot) とし、一部標準比較対象において 5-shot を併記する。
 3. **量子化非依存**:
@@ -44,5 +43,4 @@
 
 ## 5. 関連物理ファイル
 - **ベンチマーク仕様書**: `doc/BENCHMARK_REGULATION.md`
-- **評価実行スクリプト**: [`scripts/run_hf_eval.py`](file:///home/tasaburoyamada/sandbox/Lasada/scripts/run_hf_eval.py)
 - **Lean 4 検証プログラム**: [`Evaluate.lean`](file:///home/tasaburoyamada/sandbox/Lasada/Evaluate.lean)

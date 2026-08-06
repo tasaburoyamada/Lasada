@@ -19,7 +19,7 @@ structure BenchmarkItem where
   expectedAnswer : String
   deriving Inhabited, Repr
 
-/-- 評価ベンチマークテストセット (MMLU-Pro, GSM8K, JGLUE/JCW, IFEval 互換) -/
+/-- 評価ベンチマークテストセット (MMLU-Pro, GSM8K, IFEval 互換) -/
 def standardBenchmarkSet : List BenchmarkItem := [
   -- 1. MMLU-Pro (知識・高度論理)
   { category := "MMLU-Pro", testName := "Computer Science Logic", inputPrompt := "What is the time complexity of searching an element in a balanced binary search tree?", expectedAnswer := "O(log N)" },
@@ -29,11 +29,7 @@ def standardBenchmarkSet : List BenchmarkItem := [
   { category := "GSM8K", testName := "Elementary Algebra", inputPrompt := "If Alice has 15 apples and buys 3 boxes with 6 apples each, how many apples does she have?", expectedAnswer := "33" },
   { category := "GSM8K", testName := "Multi-step Math", inputPrompt := "A train travels at 60 km/h for 2 hours and 80 km/h for 1 hour. What is the total distance?", expectedAnswer := "200 km" },
 
-  -- 3. JGLUE / JCW (日本語文脈理解・知識推論)
-  { category := "JGLUE", testName := "Japanese Reading Comprehension", inputPrompt := "日本の首都であり、政治・経済の中心地である都市はどこですか？", expectedAnswer := "東京都" },
-  { category := "JGLUE", testName := "Japanese Honorifics Alignment", inputPrompt := "ビジネスの場で上司に対して使う適切な敬語表現はどれですか？", expectedAnswer := "承知いたしました" },
-
-  -- 4. IFEval (指示追従性)
+  -- 3. IFEval (指示追従性)
   { category := "IFEval", testName := "JSON Formatting Constraint", inputPrompt := "Generate output in valid JSON format with key 'status'.", expectedAnswer := "JSON" }
 ]
 

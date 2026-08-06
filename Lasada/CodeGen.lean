@@ -121,10 +121,7 @@ def generateSafetensorsBinary (weights : List (String × Array Float)) : ByteArr
 
   for (name, tensor) in weights do
     let dataLen := tensor.size * 4
-    let shapeStr := if name == "model.embed_tokens.weight" || name == "lm_head.weight" then s!"39168, {tensor.size / 39168}"
-                    else if name == "model.layers.0.self_attn.q_proj.weight" then s!"256, 8192"
-                    else if name == "model.layers.0.self_attn.o_proj.weight" then s!"2048, 256"
-                    else s!"{tensor.size}"
+    let shapeStr := s!"{tensor.size}"
     let jsonEntry := s!"\"{name}\": \{\"dtype\": \"F32\", \"shape\": [{shapeStr}], \"data_offsets\": [{currentOffset}, {currentOffset + dataLen}]}"
     jsonParts := jsonParts.concat jsonEntry
 
@@ -132,7 +129,12 @@ def generateSafetensorsBinary (weights : List (String × Array Float)) : ByteArr
     rawDataBuf := rawDataBuf.concat tensorBytes
     currentOffset := currentOffset + dataLen
 
-  let jsonStr := "{" ++ String.intercalate ", " jsonParts ++ "}"
+  let rawJsonStr := "{" ++ String.intercalate ", " jsonParts ++ "}"
+  let rawHeaderBytes := rawJsonStr.toUTF8
+
+  -- Safetensors spec requires header padding to alignment (8 bytes)
+  let padLen := (8 - (rawHeaderBytes.size % 8)) % 8
+  let jsonStr := rawJsonStr ++ String.mk (List.replicate padLen ' ')
   let headerBytes := jsonStr.toUTF8
 
   -- 8-byte N (Header length uint64)
